@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmetics Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Cosmetics Prediction</h2>
+        <form id="prediction-form">
+            <label for="ProductName">Product Name:</label>
+            <input type="text" id="ProductName" name="ProductName" required>
+
+            <label for="BrandName">Brand Name:</label>
+            <input type="text" id="BrandName" name="BrandName" required>
+
+            <label for="CompanyName">Company Name:</label>
+            <input type="text" id="CompanyName" name="CompanyName" required>
+
+            <button type="submit">Predict</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById("prediction-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let formData = {
+                ProductName: document.getElementById("ProductName").value,
+                BrandName: document.getElementById("BrandName").value,
+                CompanyName: document.getElementById("CompanyName").value
+            };
+
+            fetch("/predict", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerHTML = "Prediction: " + data.prediction;
+            })
+            .catch(error => {
+                document.getElementById("result").innerHTML = "Error: " + error;
+            });
+        });
+    </script>
+</body>
+</html>

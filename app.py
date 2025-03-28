@@ -1,18 +1,34 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, render_template, jsonify
+import pandas as pd
+import pickle
 
 app = Flask(__name__)
 
+# Load the trained model safely
+try:
+    with open("model.pkl", "rb") as f:  
+        model = pickle.load(f)
+        print("✅ Model loaded successfully.")
+except (FileNotFoundError, EOFError, pickle.UnpicklingError):
+    print("⚠️ Error: model.pkl is missing or corrupted. Using dummy prediction.")
+    model = lambda x: ["Dummy Prediction"]  # Fallback function
+
+# Home route - Serve HTML page
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+# Prediction API
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json()
-    input_data = np.array([
-        data['ChemicalName'],
-        data['CompanyName'],
-        data['BrandName']
-    ]).reshape(1, -1)
-    prediction = model.predict(input_data)
-    predicted_category = le.inverse_transform(prediction)[0]
-    return jsonify({'PrimaryCategory': predicted_category})
+    try:
+        data = request.get_json()  # Get JSON input from frontend
+        input_df = pd.DataFrame([data])  # Convert input to DataFrame
+        prediction = model.predict(input_df)  # Make prediction
+        return jsonify({'prediction': str(prediction[0])})
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
-if __name__ == '__main__':
+# Run Flask App
+if __name__ == "__main__":
     app.run(debug=True)
